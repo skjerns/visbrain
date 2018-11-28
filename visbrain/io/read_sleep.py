@@ -13,6 +13,7 @@ import numpy as np
 import datetime
 from warnings import warn
 import logging
+from scipy.stats import iqr
 
 from .dependencies import is_mne_installed
 from .dialog import dialog_load
@@ -39,6 +40,8 @@ class ReadSleepData(object):
         # Dialog window if data is None :
         if data is None:
             data = dialog_load(self, "Open dataset", '',
+                               "All EEG files (*.vhdr *.edf *.gdf *.bdf *.eeg "
+                               "*.egi *.mff *.cnt *.trc *.set *.rec);;"
                                "BrainVision (*.vhdr);;EDF (*.edf);;"
                                "GDF (*.gdf);;BDF (*.bdf);;Elan (*.eeg);;"
                                "EGI (*.egi);;MFF (*.mff);;CNT (*.cnt);;"
@@ -194,9 +197,17 @@ class ReadSleepData(object):
 
         # ---------- SCALING ----------
         # Check amplitude of the data and if necessary apply re-scaling
-        if np.abs(np.ptp(data, 0).mean()) < 0.1:
-            warn("Wrong data amplitude for Sleep software.")
-            data *= 1e6
+        # Assume that the inter-quartile amplitude of EEG data is ~50 uV
+        iqr_data = iqr(data, axis=1)
+        
+        for idx_chan, iqr_chan in enumerate(iqr_data):
+            if iqr_chan < 1:
+                mult_fact = np.floor(np.log10(50 / iqr_chan))
+                warn("Wrong channel data amplitude. Multiplying data amplitude by 10^%i" % mult_fact)
+                data[idx_chan, :] *= 10 ** mult_fact
+                warn("Wrong data amplitude for Sleep software.")
+                
+#            data *= 1e6
 
         # ---------- CONVERSION ----------=
         # Convert data and hypno to be contiguous and float 32 (for vispy):

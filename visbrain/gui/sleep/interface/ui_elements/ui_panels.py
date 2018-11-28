@@ -242,7 +242,7 @@ class UiPanels(object):
             self._yminSpin[i] = QtWidgets.QDoubleSpinBox(self._PanScrollChan)
             self._yminSpin[i].setDecimals(1)
             self._yminSpin[i].setMinimum(self['min'][i])
-            self._yminSpin[i].setMaximum(self['max'][i])
+            self._yminSpin[i].setMaximum(self['max'][i]*3)
             self._yminSpin[i].setProperty("value", -int(fact * self['std'][i]))
             self._yminSpin[i].setSingleStep(1.)
             self._PanChanLay.addWidget(self._yminSpin[i], i, 3, 1, 1)
@@ -250,7 +250,7 @@ class UiPanels(object):
             self._ymaxSpin[i] = QtWidgets.QDoubleSpinBox(self._PanScrollChan)
             self._ymaxSpin[i].setDecimals(1)
             self._ymaxSpin[i].setMinimum(self['min'][i])
-            self._ymaxSpin[i].setMaximum(self['max'][i])
+            self._ymaxSpin[i].setMaximum(self['max'][i]*3)
             self._ymaxSpin[i].setSingleStep(1.)
             self._ymaxSpin[i].setProperty("value", int(fact * self['std'][i]))
             self._PanChanLay.addWidget(self._ymaxSpin[i], i, 4, 1, 1)
@@ -346,9 +346,9 @@ class UiPanels(object):
         """Update informations about amplitudes."""
         self._get_data_info()
         self._PanAllAmpMin.setMinimum(self['min'].min())
-        self._PanAllAmpMin.setMaximum(self['max'].max())
+        self._PanAllAmpMin.setMaximum(self['max'].max()*3)
         self._PanAllAmpMax.setMinimum(self['min'].min())
-        self._PanAllAmpMax.setMaximum(self['max'].max())
+        self._PanAllAmpMax.setMaximum(self['max'].max()*3)
 
     def _fcn_chan_set_lw(self):
         """Set channels line-width."""
