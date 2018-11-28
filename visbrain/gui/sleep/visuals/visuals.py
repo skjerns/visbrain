@@ -305,7 +305,7 @@ class ChannelPlot(PrepareData):
         """
         if ylim is None:
             ylim = np.array([data.min(1), data.max(1)]).T
-
+        
         # Manage slice :
         sl = slice(0, data.shape[1]) if sl is None else sl
 
@@ -880,11 +880,12 @@ class CanvasShortcuts(object):
 
             :event: the trigger event
             """
-            if event.text == ' ':
-                pass
 
             # ------------ SLIDER ------------
-            elif event.text.lower() == 'n':  # Next (slider)
+            if event.text.lower() == 'n':  # Next (slider)
+                self._SlGoto.setValue(
+                    self._SlGoto.value() + self._SigSlStep.value())
+            elif event.text.lower() == ' ':  # Next (slider)
                 self._SlGoto.setValue(
                     self._SlGoto.value() + self._SigSlStep.value())
             elif event.text.lower() == 'b':  # Before (slider)
