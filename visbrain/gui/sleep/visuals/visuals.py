@@ -428,11 +428,11 @@ class Spectrogram(PrepareData):
         self.tf = TFmapsMesh(parent=parent)
         # Spectrogram
         self.mesh = scene.visuals.Image(np.zeros((2, 2)), parent=parent,
-                                        name='Fourier transform')
+                                        name='Multitaper')
         self.mesh.transform = vist.STTransform()
 
-    def set_data(self, sf, data, time, method='Fourier transform',
-                 cmap='rainbow', nfft=30., overlap=0., fstart=.5, fend=20.,
+    def set_data(self, sf, data, time, method='Multitaper',
+                 cmap='rainbow', nfft=30., overlap=0.3, fstart=.5, fend=25.,
                  contrast=.5, interp='nearest', norm=0):
         """Set data to the spectrogram.
 

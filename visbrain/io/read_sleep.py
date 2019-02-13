@@ -113,7 +113,9 @@ class ReadSleepData(object):
 
         # ========================== LOAD HYPNOGRAM ==========================
         # Dialog window for hypnogram :
-        if hypno is None:
+        if hypno is False:
+            hypno = None
+        elif hypno is None:
             hypno = dialog_load(self, "Open hypnogram", upath,
                                 "Text file (*.txt);;Elan (*.hyp);;"
                                 "CSV file (*.csv);;EDF+ file(*.edf);"
