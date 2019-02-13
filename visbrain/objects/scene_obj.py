@@ -5,7 +5,7 @@ import logging
 import numpy as np
 from vispy import scene
 
-from ..io import write_fig_canvas, dialog_save
+from ..io import write_fig_canvas, mpl_preview, dialog_save
 from ..utils import color2vb, set_log_level, rotate_turntable, FixedCam
 from ..visuals import CbarVisual
 from ..config import CONFIG, PROFILER
@@ -460,8 +460,18 @@ class SceneObj(object):
             use the camera of an object as the reference, turn this parameter
             to True.
         rotate : string | None
-            Rotate the scene. Use 'top', 'bottom', 'left', 'right', 'front' or
-            'back'. Only available for 3-D objects.
+            Rotate the scene (only available for 3D objects). Use :
+
+                * 'top' : top view
+                * 'bottom' : bottom view
+                * 'left' : left view
+                * 'right' : right view
+                * 'front' : front view
+                * 'back' : bottom view
+                * 'side-fl' : side view (front-left)
+                * 'side-fr' : side view (front-right)
+                * 'side-bl' : side view (back-left)
+                * 'side-br' : side view (back-right)
         zoom : float | None
             Zoom level. If zoom is in ]0, 1[, the size of the object decrease.
             If `zoom=1`, no zoom is applied. If zoom > 1., the size of the
@@ -605,6 +615,33 @@ class SceneObj(object):
         write_fig_canvas(saveas, self.canvas,
                          widget=self.canvas.central_widget, **kwargs)
 
+    def record_animation(self, name, n_pic=10):
+        """Record an animated scene and save as a *.gif file.
+
+        Note that this method :
+
+            * Only 3D objects can be animated.
+            * Requires the python package imageio
+
+        Parameters
+        ----------
+        name : string
+            Name of the gif file (e.g 'myfile.gif')
+        n_pic : int | 10
+            Number of pictures to use to render the gif.
+        """
+        import imageio
+        self._gl_uniform_transforms()
+        subplt = [(k[0] - 1, k[1] - 1) for k in self._grid_desc.keys()]
+        writer = imageio.get_writer(name)
+        for k in range(n_pic):
+            for obj in subplt:
+                if isinstance(self[obj].camera, scene.cameras.TurntableCamera):
+                    self[obj].camera.azimuth += 360. / n_pic
+            im = self.canvas.render()
+            writer.append_data(im)
+        writer.close()
+
     def _scene_shortcuts(self):
         """Add shortcuts to the scene."""
         # On key pressed :
@@ -621,16 +658,38 @@ class SceneObj(object):
                                      widget=self.canvas.central_widget)
         self.canvas.events.key_press.connect(key_pressed)
 
-    def preview(self):
-        """Previsualize the result."""
+    def render(self):
+        """Render the canvas.
+
+        Returns
+        -------
+        img : array_like
+            Array of shape (n_rows, n_columns, 4) where 4 describes the RGBA
+            components.
+        """
         self._gl_uniform_transforms()
-        self.canvas.show(visible=True)
-        # Shortcuts :
-        self._scene_shortcuts()
-        # Profiler :
-        if PROFILER and logger.level == 1:
-            logger.profiler("PARENT TREE \n%s" % self._grid.describe_tree())
-            logger.profiler(" ")
-            PROFILER.finish()
-        if sys.flags.interactive != 1 and CONFIG['SHOW_PYQT_APP']:
-            CONFIG['VISPY_APP'].run()
+        return self.canvas.render()
+
+    def preview(self, mpl=False):
+        """Previsualize the result.
+
+        Parameters
+        ----------
+        mpl : bool | False
+            Use Matplotlib to display the scene. This result in a non
+            interactive figure.
+        """
+        self._gl_uniform_transforms()
+        if CONFIG['MPL_RENDER']:
+            mpl_preview(self.canvas, widget=self.canvas.central_widget)
+        else:
+            self.canvas.show(visible=True)
+            # Shortcuts :
+            self._scene_shortcuts()
+            # Profiler :
+            if PROFILER and logger.level == 1:
+                logger.profiler("PARENT TREE\n%s" % self._grid.describe_tree())
+                logger.profiler(" ")
+                PROFILER.finish()
+            if sys.flags.interactive != 1 and CONFIG['SHOW_PYQT_APP']:
+                CONFIG['VISPY_APP'].run()

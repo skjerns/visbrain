@@ -9,7 +9,7 @@ import vispy.visuals.transforms as vist
 from .scene_obj import VisbrainCanvas
 from ..io import (write_fig_canvas, dialog_save, path_to_visbrain_data,
                   load_config_json, get_data_url_path, download_file,
-                  get_files_in_folders)
+                  get_files_in_folders, mpl_preview)
 from ..utils import color2vb, set_log_level, merge_cameras
 from ..config import CONFIG
 from ..visuals import CbarBase
@@ -200,7 +200,7 @@ class VisbrainObject(_VisbrainObj):
         return canvas
 
     def preview(self, bgcolor='black', axis=False, xyz=False, show=True,
-                obj=None, size=(1200, 800), **kwargs):
+                obj=None, size=(1200, 800), mpl=False, **kwargs):
         """Previsualize the result.
 
         Parameters
@@ -216,23 +216,93 @@ class VisbrainObject(_VisbrainObj):
             object.
         size : tuple | (1200, 800)
             Default size of the window.
+        mpl : bool | False
+            Use Matplotlib to display the object. This result in a non
+            interactive figure.
         kwargs : dict | {}
             Optional arguments are passed to the VisbrainCanvas class.
         """
-        parent_bck = self._node.parent
-        kwargs['cargs'] = {'size': size}
-        canvas = self._get_parent(bgcolor, axis, show, obj, **kwargs)
-        if xyz:
-            vispy.scene.visuals.XYZAxis(parent=canvas.wc.scene)
-        # view.camera = camera
-        if (sys.flags.interactive != 1) and show:
-            CONFIG['VISPY_APP'].run()
-        # Reset orignial parent :
-        self._node.parent = parent_bck
+        if CONFIG['MPL_RENDER'] or mpl:
+            canvas = self._get_parent(bgcolor, False, False, obj, **kwargs)
+            mpl_preview(canvas.canvas, widget=canvas.canvas.central_widget)
+        else:
+            parent_bck = self._node.parent
+            kwargs['cargs'] = {'size': size}
+            canvas = self._get_parent(bgcolor, axis, show, obj, **kwargs)
+            if xyz:
+                vispy.scene.visuals.XYZAxis(parent=canvas.wc.scene)
+            # view.camera = camera
+            if (sys.flags.interactive != 1) and show:
+                CONFIG['VISPY_APP'].run()
+            # Reset orignial parent :
+            self._node.parent = parent_bck
 
     def describe_tree(self):
         """Tree description."""
         return self._node.describe_tree()
+
+    def animate(self, step=1., interval='auto', iterations=-1):
+        """Animate the object.
+
+        Note that this method can only be used with 3D objects.
+
+        Parameters
+        ----------
+        step : float | 1.
+            Rotation step.
+        interval : float | 'auto'
+            Time between events in seconds. The default is ‘auto’, which
+            attempts to find the interval that matches the refresh rate of the
+            current monitor. Currently this is simply 1/60.
+        iterations : int | -1
+            Number of iterations. Can be -1 for infinite.
+        """
+        from vispy.app import Timer
+        def on_timer(*args, **kwargs):  # noqa
+            if hasattr(self, 'camera'):
+                self.camera.azimuth += step  # noqa
+        kw = dict(connect=on_timer, app=CONFIG['VISPY_APP'],
+                  interval=interval, iterations=iterations)
+        self._app_timer = Timer(**kw)
+        self._app_timer.start()
+
+    def record_animation(self, name, n_pic=10, bgcolor=None):
+        """Record an animated object and save as a *.gif file.
+
+        Note that this method :
+
+            * Can only be used with 3D objects.
+            * Requires the python package imageio
+
+        Parameters
+        ----------
+        name : string
+            Name of the gif file (e.g 'myfile.gif')
+        n_pic : int | 10
+            Number of pictures to use to render the gif.
+        bgcolor : string, tuple, list | None
+            Background color.
+        """
+        import imageio
+        writer = imageio.get_writer(name)
+        canvas = self._get_parent(bgcolor, False, False)
+        for k in range(n_pic):
+            im = canvas.canvas.render()
+            writer.append_data(im)
+            self.camera.azimuth += 360. / n_pic
+        writer.close()
+
+    def render(self):
+        """Render the canvas.
+
+        Returns
+        -------
+        img : array_like
+            Array of shape (n_rows, n_columns, 4) where 4 describes the RGBA
+            components.
+        """
+        canvas = self._get_parent(None, False, False)
+        return canvas.canvas.render()
 
     def screenshot(self, saveas, print_size=None, dpi=300., unit='centimeter',
                    factor=None, region=None, autocrop=False, bgcolor=None,

@@ -18,7 +18,7 @@
 Visbrain
 ########
 
-.. figure::  https://github.com/EtienneCmb/visbrain/blob/master/docs/picture/visbrain.png
+.. figure::  https://github.com/EtienneCmb/visbrain/blob/master/docs/_static/ico/visbrain.png
    :align:   center
 
 
@@ -42,7 +42,7 @@ Visbrain requires :
 
 * NumPy >= 1.13
 * SciPy
-* VisPy >= 0.5.0
+* VisPy >= 0.5.3
 * Matplotlib >= 1.5.5
 * PyQt5
 * Pillow

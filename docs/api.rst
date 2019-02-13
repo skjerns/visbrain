@@ -50,6 +50,7 @@ Objects
     ColorbarObj
     ConnectObj
     CrossSecObj
+    GridSignalsObj
     HypnogramObj
     ImageObj
     PacmapObj
@@ -61,6 +62,7 @@ Objects
     TimeFrequencyObj
     TimeSeries3DObj
     VectorObj
+    VispyObj
     VolumeObj
 
 Compatibility with existing software
