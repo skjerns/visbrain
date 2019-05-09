@@ -521,10 +521,8 @@ class Spectrogram(PrepareData):
             # =================== COLOR ===================
             # Get clim :
             _mesh = mesh[sls, :]
-            stimer.start()
             is_finite = np.isfinite(_mesh)
             _mesh[~is_finite] = np.percentile(_mesh[is_finite], 5)
-            stimer.stop()
             contrast = 1. if contrast is None else contrast
             clim = (contrast * _mesh.min(), contrast * _mesh.max())
             # Turn mesh into color array for selected frequencies:
@@ -919,9 +917,9 @@ class CanvasShortcuts(object):
                     val_sym = self._PanAllAmpMax.value() - 2 * sign * delta
                     self._PanAllAmpMax.setValue(val_sym)
                 else:  # non-symetrical amplitudes
-                    for m, M in zip(self._yminSpin, self._ymaxSpin):
-                        m.setValue(m.value() + sign * delta)
-                        M.setValue(M.value() - sign * delta)
+                    for mi, ma in zip(self._yminSpin, self._ymaxSpin):
+                        mi.setValue(mi.value() + sign * delta)
+                        ma.setValue(ma.value() - sign * delta)
 
             # ------------  GRID/MAGNIFY ------------
             elif event.text.lower() == 'm':  # Magnify
