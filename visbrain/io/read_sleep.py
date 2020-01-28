@@ -11,6 +11,7 @@ import os
 import io
 import numpy as np
 import datetime
+from scipy.stats import iqr
 from warnings import warn
 import logging
 from scipy.stats import iqr
@@ -40,7 +41,7 @@ class ReadSleepData(object):
         # Dialog window if data is None :
         if data is None:
             data = dialog_load(self, "Open dataset", '',
-                               "All EEG files (*.vhdr *.edf *.gdf *.bdf *.eeg "
+                               "Any EEG files (*.vhdr *.edf *.gdf *.bdf *.eeg "
                                "*.egi *.mff *.cnt *.trc *.set *.rec);;"
                                "BrainVision (*.vhdr);;EDF (*.edf);;"
                                "GDF (*.gdf);;BDF (*.bdf);;Elan (*.eeg);;"
@@ -113,7 +114,9 @@ class ReadSleepData(object):
 
         # ========================== LOAD HYPNOGRAM ==========================
         # Dialog window for hypnogram :
-        if hypno is None:
+        if hypno is False:
+            hypno = None
+        elif hypno is None:
             hypno = dialog_load(self, "Open hypnogram", upath,
                                 "Text file (*.txt);;Elan (*.hyp);;"
                                 "CSV file (*.csv);;EDF+ file(*.edf);"
@@ -196,18 +199,16 @@ class ReadSleepData(object):
                 hypno = np.zeros((npts,), dtype=np.float32)
 
         # ---------- SCALING ----------
-        # Check amplitude of the data and if necessary apply re-scaling
         # Assume that the inter-quartile amplitude of EEG data is ~50 uV
-        iqr_data = iqr(data, axis=1)
-        
-        for idx_chan, iqr_chan in enumerate(iqr_data):
-            if iqr_chan < 1:
-                mult_fact = np.floor(np.log10(50 / iqr_chan))
-                warn("Wrong channel data amplitude. Multiplying data amplitude by 10^%i" % mult_fact)
-                data[idx_chan, :] *= 10 ** mult_fact
-                warn("Wrong data amplitude for Sleep software.")
-                
-#            data *= 1e6
+        iqr_chan = iqr(data[:, :int(data.shape[1] / 4)], axis=-1)
+        bad_iqr = iqr_chan < 1.
+
+        if np.any(bad_iqr):
+            mult_fact = np.zeros_like(iqr_chan)
+            iqr_chan[iqr_chan == 0.] = 1.
+            mult_fact[bad_iqr] = np.floor(np.log10(50. / iqr_chan[bad_iqr]))
+            data *= 10. ** mult_fact[..., np.newaxis]
+            warn("Wrong channel data amplitude. ")
 
         # ---------- CONVERSION ----------=
         # Convert data and hypno to be contiguous and float 32 (for vispy):

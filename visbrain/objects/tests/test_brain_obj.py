@@ -12,7 +12,13 @@ NEEDED_FILES = dict(ANNOT_FILE_1='lh.aparc.annot',
                     OVERLAY_1='lh.sig.nii.gz',
                     OVERLAY_2='lh.alt_sig.nii.gz',
                     PARCELLATES_1='lh.aparc.a2009s.annot',
-                    PARCELLATES_2='rh.aparc.annot'
+                    PARCELLATES_2='rh.aparc.annot',
+                    X3D_FILE='ferret.x3d',
+                    GII_FILE='lh.bert.inflated.gii',
+                    GII_OVERLAY='lh.bert.thickness.gii',
+                    OBJ_FILE='brain.obj',
+                    LH_FREESURFER='lh.inflated',
+                    RH_FREESURFER='rh.inflated'
                     )
 
 # BRAIN :
@@ -53,6 +59,18 @@ class TestBrainObj(_TestObjects):
         for k, i in zip(['B1', 'B2', 'B3'], ['left', 'both', 'right']):
             b_obj.set_data(name=k, hemisphere=i)
 
+    def test_supported_format(self):
+        """Test for input formats."""
+        for k in ['X3D_FILE', 'GII_FILE', 'OBJ_FILE']:
+            file = self.need_file(NEEDED_FILES[k])
+            BrainObj(file)
+        # Test Freesurfer files
+        _lh = self.need_file(NEEDED_FILES['LH_FREESURFER'])
+        _rh = self.need_file(NEEDED_FILES['RH_FREESURFER'])
+        BrainObj(_lh)
+        BrainObj(_rh)
+        BrainObj((_lh, _rh))
+
     def test_custom_templates(self):
         """Test passing vertices, faces and normals."""
         BrainObj('Custom', vertices=vertices, faces=faces)
@@ -75,7 +93,7 @@ class TestBrainObj(_TestObjects):
         b_obj = BrainObj('inflated')
         file_1 = self.need_file(NEEDED_FILES['OVERLAY_1'])
         file_2 = self.need_file(NEEDED_FILES['OVERLAY_2'])
-        # Overlay :
+        # NIFTI Overlay :
         b_obj.add_activation(file=file_1, clim=(4., 30.), hide_under=4,
                              cmap='Reds_r', hemisphere='left')
         b_obj.add_activation(file=file_2, clim=(4., 30.), hide_under=4,
@@ -87,6 +105,11 @@ class TestBrainObj(_TestObjects):
         b_obj.add_activation(data=data, vertices=vertices, smoothing_steps=3)
         b_obj.add_activation(data=data, vertices=vertices, smoothing_steps=5,
                              clim=(13., 22.), hide_under=13., cmap='plasma')
+        # GII overlays :
+        gii = self.need_file(NEEDED_FILES['GII_FILE'])
+        gii_overlay = self.need_file(NEEDED_FILES['GII_OVERLAY'])
+        b_gii = BrainObj(gii)
+        b_gii.add_activation(file=gii_overlay)
 
     def test_parcellize(self):
         """Test function parcellize."""

@@ -9,7 +9,7 @@ from visbrain.config import PROFILER
 from visbrain.io.dependencies import is_lspopt_installed
 
 try:
-    _fromUtf8 = QtCore.QString.fromUtf8
+    _fromUtf8 = QtCore.QString.fromUtf8  # noqa
 except AttributeError:
     def _fromUtf8(s):  # noqa
         """From utf8 pyqt function."""
@@ -241,16 +241,16 @@ class UiPanels(object):
             # Add ymin spinbox :
             self._yminSpin[i] = QtWidgets.QDoubleSpinBox(self._PanScrollChan)
             self._yminSpin[i].setDecimals(1)
-            self._yminSpin[i].setMinimum(self['min'][i])
-            self._yminSpin[i].setMaximum(self['max'][i]*3)
+            self._yminSpin[i].setMinimum(10. * self['min'][i])
+            self._yminSpin[i].setMaximum(10. * self['max'][i])
             self._yminSpin[i].setProperty("value", -int(fact * self['std'][i]))
             self._yminSpin[i].setSingleStep(1.)
             self._PanChanLay.addWidget(self._yminSpin[i], i, 3, 1, 1)
             # Add ymax spinbox :
             self._ymaxSpin[i] = QtWidgets.QDoubleSpinBox(self._PanScrollChan)
             self._ymaxSpin[i].setDecimals(1)
-            self._ymaxSpin[i].setMinimum(self['min'][i])
-            self._ymaxSpin[i].setMaximum(self['max'][i]*3)
+            self._ymaxSpin[i].setMinimum(10. * self['min'][i])
+            self._ymaxSpin[i].setMaximum(10. * self['max'][i])
             self._ymaxSpin[i].setSingleStep(1.)
             self._ymaxSpin[i].setProperty("value", int(fact * self['std'][i]))
             self._PanChanLay.addWidget(self._ymaxSpin[i], i, 4, 1, 1)
@@ -324,12 +324,12 @@ class UiPanels(object):
     def _fcn_chan_amplitude(self):
         """Change amplitude of each channel."""
         # Loop over spinbox and update camera rect :
-        for k, (m, M) in enumerate(zip(self._yminSpin, self._ymaxSpin)):
+        for k, (mi, ma) in enumerate(zip(self._yminSpin, self._ymaxSpin)):
             # Use either symetric / non-symetric amplitudes :
             if self._PanAmpSym.isChecked():
-                self._ylims[k, :] = np.array([-M.value(), M.value()])
+                self._ylims[k, :] = np.array([-ma.value(), ma.value()])
             else:
-                self._ylims[k, :] = np.array([m.value(), M.value()])
+                self._ylims[k, :] = np.array([mi.value(), ma.value()])
             rect = (self._chan.x[0], self._ylims[k, 0],
                     self._chan.x[1] - self._chan.x[0],
                     self._ylims[k, 1] - self._ylims[k, 0])
@@ -337,9 +337,9 @@ class UiPanels(object):
 
     def _fcn_all_amp(self):
         """Set all channel amplitudes."""
-        for k, (m, M) in enumerate(zip(self._yminSpin, self._ymaxSpin)):
-            m.setValue(self._PanAllAmpMin.value())
-            M.setValue(self._PanAllAmpMax.value())
+        for k, (mi, ma) in enumerate(zip(self._yminSpin, self._ymaxSpin)):
+            mi.setValue(self._PanAllAmpMin.value())
+            ma.setValue(self._PanAllAmpMax.value())
         self._fcn_chan_amplitude()
 
     def _fcn_update_amp_info(self):

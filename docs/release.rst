@@ -7,12 +7,55 @@ Changelog
    :local:
    :depth: 1
 
+0.4.5
+-----
+
+New features
+~~~~~~~~~~~~
+
+* :class:`visbrain.objects.BrainObj` natively support Freesurfer files
+
+Improvements
+~~~~~~~~~~~~
+
+* Protect Sleep from MemoryError for large sleep files (`PR37 <https://github.com/EtienneCmb/visbrain/pull/37>`_)
+* Improve spectrogram in case of non finite values (`PR39 <https://github.com/EtienneCmb/visbrain/pull/39>`_)
+* Fix path to the url file for pyenv (`PR41 <https://github.com/EtienneCmb/visbrain/pull/41>`_)
+
+0.4.4
+-----
+
+New features
+~~~~~~~~~~~~
+
+* :class:`visbrain.objects.BrainObj` now support x3d, gii and obj files
+* New object : :class:`visbrain.objects.GridSignalsObj` to plot multi-dimensional time-series and MNE instances or Raw, RawArray and Epochs
+* Each object now inherits a method to animate it and to save the animation as a GIF. See for example :class:`visbrain.objects.BrainObj.animate` and :class:`visbrain.objects.BrainObj.record_animation`. Note that object can also be animate inside subplot (SceneObj)
+* New object : :class:`visbrain.objects.VispyObj` makes VisPy's visuals compatibles with Visbrain's objects
+* :class:`visbrain.objects.SourceObj` control masked sources' radius
+* :class:`visbrain.objects.ConnectObj` finer control of transparency using input parameters `dynamic_order` and `dynamic_orientation`
+* Objects and scenes can be plotted inside notebooks. For now it results in a non-interactive figure
+
+Improvements
+~~~~~~~~~~~~
+* Make :class:`visbrain.objects` compatibles with `sphinx gallery <https://sphinx-gallery.readthedocs.io/en/latest/>`_
+* Use scientific notation for colorbar extremas
+* File extensions when loading sleep data (`PR32 <https://github.com/EtienneCmb/visbrain/pull/32>`_)
+* Amplitude range of sleep files (`PR33 <https://github.com/EtienneCmb/visbrain/pull/33>`_)
+
+Bug fixes
+~~~~~~~~~
+* Fix :class:`visbrain.gui.Signal` when using 1D signals
+
 0.4.3
 -----
 
 New features
 ~~~~~~~~~~~~
 * :class:`visbrain.objects.SourceObj.project_sources` can now be projected to a specific overlay.
+* :class:`visbrain.objects.ConnectObj.get_nb_connections_per_node` to get the number of connections per node
+* :class:`visbrain.objects.ConnectObj.analyse_connections` to analyse and group connectivity links per ROI
+* :class:`visbrain.objects.RoiObj.get_centroids` to get the (x, y, z) MNI coordinates of ROIs' center
 
 Improvements
 ~~~~~~~~~~~~

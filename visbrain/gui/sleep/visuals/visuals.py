@@ -428,11 +428,11 @@ class Spectrogram(PrepareData):
         self.tf = TFmapsMesh(parent=parent)
         # Spectrogram
         self.mesh = scene.visuals.Image(np.zeros((2, 2)), parent=parent,
-                                        name='Fourier transform')
+                                        name='Multitaper')
         self.mesh.transform = vist.STTransform()
 
-    def set_data(self, sf, data, time, method='Fourier transform',
-                 cmap='rainbow', nfft=30., overlap=0., fstart=.5, fend=20.,
+    def set_data(self, sf, data, time, method='Multitaper',
+                 cmap='rainbow', nfft=30., overlap=0.3, fstart=.5, fend=25.,
                  contrast=.5, interp='nearest', norm=0):
         """Set data to the spectrogram.
 
@@ -466,6 +466,8 @@ class Spectrogram(PrepareData):
         norm : int | 0
             Normalization method for TF.
         """
+        import stimer
+        stimer.start('mesh')
         # =================== PREPARE DATA ===================
         # Prepare data (only if needed)
         if self:
@@ -497,6 +499,14 @@ class Spectrogram(PrepareData):
                                                    noverlap=overlap,
                                                    window='hamming')
             mesh = 20 * np.log10(mesh)
+            import stimer
+#            stimer.start()
+#            is_finite = np.isfinite(mesh)
+#            mesh[~is_finite] = np.percentile(mesh[is_finite], 5)
+#            stimer.stop()
+#            mesh[~is_finite] = np.min(mesh[is_finite])
+
+#            print( np.min(mesh[idx_notfinite==False]))
 
             # =================== FREQUENCY SELECTION ===================
             # Find where freq is [fstart, fend] :
@@ -511,10 +521,16 @@ class Spectrogram(PrepareData):
             # =================== COLOR ===================
             # Get clim :
             _mesh = mesh[sls, :]
+            is_finite = np.isfinite(_mesh)
+            _mesh[~is_finite] = np.percentile(_mesh[is_finite], 5)
             contrast = 1. if contrast is None else contrast
             clim = (contrast * _mesh.min(), contrast * _mesh.max())
             # Turn mesh into color array for selected frequencies:
             self.mesh.set_data(_mesh)
+            
+#            is_finite = np.isfinite(_mesh)
+#            _min = np.percentile(_mesh[is_finite], 5)
+#            _max = np.percentile(_mesh[is_finite], 95)
             _min, _max = _mesh.min(), _mesh.max()
             _cmap = cmap_to_glsl(limits=(_min, _max), clim=clim, cmap=cmap)
             self.mesh.cmap = _cmap
@@ -534,6 +550,7 @@ class Spectrogram(PrepareData):
             # Get camera rectangle :
             self.rect = (tm, freq.min(), th - tm, freq.max() - freq.min())
             self.freq = freq
+            stimer.stop('mesh')
         # Visibility :
         self.mesh.visible = 0 if method == 'Wavelet' else 1
         self.tf.visible = 1 if method == 'Wavelet' else 0
@@ -900,9 +917,9 @@ class CanvasShortcuts(object):
                     val_sym = self._PanAllAmpMax.value() - 2 * sign * delta
                     self._PanAllAmpMax.setValue(val_sym)
                 else:  # non-symetrical amplitudes
-                    for m, M in zip(self._yminSpin, self._ymaxSpin):
-                        m.setValue(m.value() + sign * delta)
-                        M.setValue(M.value() - sign * delta)
+                    for mi, ma in zip(self._yminSpin, self._ymaxSpin):
+                        mi.setValue(mi.value() + sign * delta)
+                        ma.setValue(ma.value() - sign * delta)
 
             # ------------  GRID/MAGNIFY ------------
             elif event.text.lower() == 'm':  # Magnify
